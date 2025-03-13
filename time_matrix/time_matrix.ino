@@ -16,7 +16,7 @@ unsigned int watchrs = 80;             // скорость бегущей стр
 unsigned int pausatb = 5000;   // время табло для волейбольных счётов
 unsigned int pausa1 = 5000;   // на сколько мсек остановится время на табло
 unsigned int pausa2 = 1000;     // на сколько мсек остановится температура и влажность
-unsigned int brightness = 200;  // яркость матрицы с адресной лентой
+unsigned int brightness = 100;  // яркость матрицы с адресной лентой
 
 // настройки матрицы (если текст выводится некорректно, следует их изменить)
 Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(WIDTH, ROWS, 1, 1, LED_PIN,
@@ -42,7 +42,7 @@ void setup() {
   matrix.begin();
   matrix.fillScreen(0);
   // установка цветовой палитры адресной ленты (RGB)
-  matrix.setTextColor(matrix.Color(255, 0, 255));
+  matrix.setTextColor(matrix.Color(0, 255, 0));
   matrix.setTextWrap(false);
   matrix.setBrightness(brightness);
 
@@ -55,6 +55,41 @@ void loop() {
   Serial.println(watch.gettime("H:i"));
   variant(); // первый вариант с бегущей строкой
 }
+
+String utf8rus(String source)
+{
+  int i,k;
+  String target;
+  unsigned char n;
+  char m[2] = { '0', '\0' };
+
+  k = source.length(); i = 0;
+
+  while (i < k) {
+    n = source[i]; i++;
+
+    if (n >= 0xBF){
+      switch (n) {
+        case 0xD0: {
+          n = source[i]; i++;
+          if (n == 0x81) { n = 0xA8; break; }
+          if (n >= 0x90 && n <= 0xBF) n = n + 0x2F;
+          break;
+        }
+        case 0xD1: {
+          n = source[i]; i++;
+          if (n == 0x91) { n = 0xB7; break; }
+          if (n >= 0x80 && n <= 0x8F) n = n + 0x6F;
+          break;
+        }
+      }
+    }
+    m[0] = n; target = target + String(m);
+  }
+return target;
+}
+
+
 void scores() {
   matrix.setBrightness(brightness);
   matrix.fillScreen(0);
@@ -104,7 +139,7 @@ void scores() {
     matrix.print(right);
     matrix.show();
     delay(watchr);
-    if (x > -1){
+    if (x > 0){
       x--;
     } else{
       if (digitalRead(12)) { x = WIDTH; w = 0;}
@@ -177,7 +212,10 @@ void variant() {
   while (w == 4) {
     matrix.fillScreen(0);
     matrix.setCursor(x, 0);
-    matrix.print("Licey-internat N1 Almetyevsk");
+//    matrix.setFont(&FreeSerif6pt8b); // выбор шрифта
+    matrix.print(utf8rus("Тест"));
+//    matrix.setFont(); // выбор шрифта по умолчанию
+    matrix.print("Test");
     matrix.show();
     delay(watchrs);
     int buttonState = digitalRead(12);
